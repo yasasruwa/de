@@ -33,7 +33,34 @@ def main():
             new_data = pd.DataFrame([data])
             st.session_state.df = pd.concat([st.session_state.df, new_data], ignore_index=True)
 
+    # Display DataFrame
+    if not st.session_state.df.empty:
         st.write(st.session_state.df)
+
+        # Delete Functionality
+        delete_index = st.selectbox("Select a record to delete (by index)", range(len(st.session_state.df)))
+        if st.button('Delete Record'):
+            st.session_state.df = st.session_state.df.drop(st.session_state.df.index[delete_index]).reset_index(
+                drop=True)
+
+        # Edit Functionality
+        edit_index = st.selectbox("Select a record to edit (by index)", range(len(st.session_state.df)),
+                                  key="edit_index")
+        if 'edit_record' not in st.session_state:
+            st.session_state.edit_record = {col: "" for col in st.session_state.df.columns}
+
+        if st.button("Load Record for Editing"):
+            st.session_state.edit_record = st.session_state.df.iloc[edit_index].to_dict()
+
+        # Display the edit form if a record is loaded
+        if st.session_state.edit_record:
+            updated_data = {}
+            for col in st.session_state.df.columns:
+                updated_data[col] = st.text_input(f"Edit data for {col}", value=st.session_state.edit_record[col],
+                                                  key=f"edit_{col}")
+            if st.button("Update Record"):
+                st.session_state.df.iloc[edit_index] = pd.Series(updated_data)
+                st.session_state.edit_record = None  # Clear the edit form
 
         # Download button for Excel file
         if not st.session_state.df.empty:
